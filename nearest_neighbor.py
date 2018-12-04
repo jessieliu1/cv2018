@@ -28,13 +28,26 @@ def ind2sub(s, IND):
 def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
 
     S = np.reshape(S, (h,w,3))
-    RX = np.matmul(X, np.where(R != 0, 1, 0))
     
+    temp = np.argwhere(R != 0)
+    print(temp.shape)
+    print(temp)
+    
+    RX = np.where(np.argwhere(R != 0))[0]
+    print("RX")
+    print(RX.shape)
+    
+    print("test")
     min_l2 = float('inf')
 
+    print("test2")
+    
     RXp = Vp.T * (np.subtract(RX,mp))
+    
+    print("Heading into tiling")
     dif = np.tile(RXp, (1, Pp.shape[1])) - Pp
     
+    print("Out of tiling")
     
     sqr = np.sum(np.square(dif), axis = 0)
     
@@ -45,6 +58,8 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     
     temp = np.zeros( (math.floor( (h-Q_size)/Pstride), math.floor( (w-Q_size)/Pstride)) )
 
+    print("ind2sub starting")
+    
     ls,ks =ind2sub(temp,math.ceil(idx/4)) 
     ks=(np.subtract(ks-1))*Pstride+1
     ls=(np.subtract(ls-1))*Pstride+1
