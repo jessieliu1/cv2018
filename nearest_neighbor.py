@@ -4,7 +4,9 @@
 # In[9]:
 
 import numpy as np
-
+import numpy.matlib as npm
+import matlab
+import matlab.engine
 
 # In[10]:
 
@@ -24,29 +26,57 @@ def ind2sub(s, IND):
     J = np.array(J)
     return I,J 
       
+def add_noise(image,sigma=50):
+    print(image.shape)
+    row,col,ch= image.shape
+
+
+    mean = 0
+    gauss = np.random.normal(mean,sigma,(row,col,ch))
+    gauss = gauss.astype('uint8')
+    gauss = gauss.reshape(row,col,ch)
+    return (image + gauss).astype('uint8')
 
 def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
 
     S = np.reshape(S, (h,w,3))
     
     temp = np.argwhere(R != 0)
-    print(temp.shape)
-    print(temp)
+    #print(temp.shape)
+    #print(temp)
     
     RX = np.where(np.argwhere(R != 0))[0]
-    print("RX")
-    print(RX.shape)
+    print("RX:", RX.shape)
     
-    print("test")
+    #print("test")
     min_l2 = float('inf')
 
-    print("test2")
+    #print("test2")
     
     RXp = Vp.T * (np.subtract(RX,mp))
     
-    print("Heading into tiling")
-    dif = np.tile(RXp, (1, Pp.shape[1])) - Pp
+    print("RXp: ", RXp.shape)
     
+    #eng = matlab.engine.start_matlab()
+    print("engine started")
+
+    temp = int(Pp.shape[1])
+    #RXp = matlab.double(RXp.tolist())
+
+
+
+    print("Heading into tiling")
+    RXp = npm.repmat(RXp, 1, temp)
+    #dif = eng.repmat(RXp, [1, temp])
+
+    print(dif)
+
+
+
+    #dif = np.tile(RXp, (1, Pp.shape[1])) - Pp
+    
+    #dif = RXp
+
     print("Out of tiling")
     
     sqr = np.sum(np.square(dif), axis = 0)
