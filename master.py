@@ -8,8 +8,8 @@ from skimage.transform import rescale, resize
 import scipy as scp
 from skimage.segmentation import active_contour
 from scipy import signal
-#import matlab
-#import matlab.engine
+import matlab
+import matlab.engine
 from irls import irls
 from nearest_neighbor import nearest_n
 
@@ -182,7 +182,22 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
         h = math.ceil(h0/L)
         w = math.ceil(w0/L)
         X = rescale(X, 1/L)
+
+        #X = x+
+
         hall = rescale(hall0,1/L)
+
+
+        print("content_scaled: ", content_scaled.shape)
+        print("style_scaled: ", style_scaled.shape)
+        print("mask: ", mask.shape)
+        print("C: ", C.shape)
+        print("S: ", S.shape)
+        print("h: ", h)
+        print("w: ", w)
+        print("X: ", X.shape)
+        print("hall: ", hall.shape)
+
         
         #iterate through patch sizes, like in the algorithm.
         for N in patch_sizes:
@@ -198,7 +213,12 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             
             for k in range (0,(h-current_patch+1), p_str): #+2 bc python not inclusive but matlab is
                 for j in range (0, (w-current_patch+1), p_str):
-                    patch = S[k:(k+current_patch), j:(j+current_patch)]
+                    patch = S[k:(k+current_patch), j:(j+current_patch), :]
+
+                    if k == 40 and j == 64:
+                        plt.imshow(patch)
+                        print("Patch sum: ", np.sum(patch))
+
                     for i in range (0,4):
                         temp = scp.misc.imrotate(patch,i*90,'bilinear')
                         temp = temp.flatten()
@@ -210,15 +230,44 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             #S = np.copy(S)
             
             #Remove mean
-            #print((P.sum(axis= 0)))
-            #print(P.shape)
-            
+            print("Pre mean sum: ", sum(P.sum(axis= 0)))
+            print("P shape:", P.shape)
+            #exit()
             mp = np.average(P)
             P = np.subtract(P,mp)
-            
+
+            print("Post mean sum of p: ", sum(P.sum(axis= 0)))
+            #'''
             #Compute PCA of P
             print("Doing eig")
-            V,D = np.linalg.eig(np.dot(P,P.T))
+            #V,D = np.linalg.eig(P @ P.T)
+
+            temp = P @ P.T
+            print("Temp: ", temp.shape)
+
+
+            #V,D = scp.linalg.eig(temp)
+            eng = matlab.engine.start_matlab()
+            print("engine started")
+            temp = matlab.double(temp.tolist())
+
+            print("eigening")
+            check = eng.eig(temp)
+
+            print("Check: ",type(check))
+            check = np.array(check)
+            print("Check: ",type(check))
+            print("Check shape: ", check.shape)
+
+
+            #FIGURE OUT HOW TO GET FROM CHECK BEING SHAPE 3888, 1 to V & D... yikes!
+
+            V = check[0]
+            D = check[1]
+
+            print("V: ", V.shape)
+            print("D: ", D.shape)
+
             
             D = D.real
             print("eig gotten")
@@ -254,16 +303,19 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             
             print(Vp.shape)
             print(Pp.shape)
+            #'''
             
-            
-            Vp = np.zeros((1, 3888))
-            Pp = np.zeros((1, 1156))
+            #Vp = np.zeros((1, 3888))
+            #Pp = np.zeros((1, 1156))
         
             for i in range (0,3):
                 
                 #1. Style fusion
                 X = hallcoeff*hall+(1-hallcoeff)*hall
-                
+                X = X.flatten()
+                print("X post hall coeff: ", X.shape)
+
+
                 #2. Patch Matching
                 print("Patch Matching")
                 index = np.argwhere(np.array(patch_sizes) == current_patch)[0][0] #CAN'T LIST SAME PATCH SIZE TWICE!

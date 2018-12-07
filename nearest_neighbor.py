@@ -39,19 +39,26 @@ def add_noise(image,sigma=50):
 
 def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
 
+    R = R.flatten()
+    X = X.flatten()
+    print("X: ", X.shape)
+    print("R: ", R.shape)
     S = np.reshape(S, (h,w,3))
+    print("S: ", S.shape)
     
-    temp = np.argwhere(R != 0)
+    #temp = np.argwhere(R != 0)
     #print(temp.shape)
     #print(temp)
     
-    RX = np.where(np.argwhere(R != 0))[0]
+    RX = X[np.array(np.where(R!=0.0)[0])]
     print("RX:", RX.shape)
     
     #print("test")
     min_l2 = float('inf')
 
     #print("test2")
+
+    print("Vp: ", Vp.shape)
     
     RXp = Vp.T * (np.subtract(RX,mp))
     
