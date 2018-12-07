@@ -236,8 +236,10 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             mp = np.average(P)
             P = np.subtract(P,mp)
 
+
             print("Post mean sum of p: ", sum(P.sum(axis= 0)))
             #'''
+
             #Compute PCA of P
             print("Doing eig")
             #V,D = np.linalg.eig(P @ P.T)
@@ -303,11 +305,16 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             
             print(Vp.shape)
             print(Pp.shape)
+
             #'''
             
             #Vp = np.zeros((1, 3888))
             #Pp = np.zeros((1, 1156))
-        
+
+            
+            Vp = np.zeros((1, 3888))
+            Pp = np.zeros((1, 1156))
+                    
             for i in range (0,3):
                 
                 #1. Style fusion
