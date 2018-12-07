@@ -215,7 +215,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             
             mp = np.average(P)
             P = np.subtract(P,mp)
-            
+            '''
             #Compute PCA of P
             print("Doing eig")
             V,D = np.linalg.eig(np.dot(P,P.T))
@@ -254,7 +254,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             
             print(Vp.shape)
             print(Pp.shape)
-            
+            '''
             
             Vp = np.zeros((1, 3888))
             Pp = np.zeros((1, 1156))
