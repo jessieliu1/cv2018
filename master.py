@@ -8,8 +8,8 @@ from skimage.transform import rescale, resize
 import scipy as scp
 from skimage.segmentation import active_contour
 from scipy import signal
-import matlab
-import matlab.engine
+#import matlab
+#import matlab.engine
 from irls import irls
 from nearest_neighbor import nearest_n
 
@@ -122,6 +122,7 @@ def laplace_of_gaussian(gray_img, sigma=1., kappa=0.75, pad=False):
 
 # In[8]:
 
+'''
 def segment(img,scale):
     #img = matlab.double(img.tolist())
     #eng = matlab.engine.start_matlab()
@@ -152,7 +153,7 @@ def segment(img,scale):
     gaussian_filter = gaussian2D(scale)
     W = signal.convolve2d((BW+10*E).astype(float),gaussian_filter,mode='same')
     return W
-
+'''
 
 # pikachu = pikachu.astype('uint8')
 # gray_van_gogh = color.rgb2gray(pikachu)
@@ -215,44 +216,44 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             mp = np.average(P)
             P = np.subtract(P,mp)
             
-#             #Compute PCA of P
-#             print("Doing eig")
-#             V,D = np.linalg.eig(np.dot(P,P.T))
+            #Compute PCA of P
+            print("Doing eig")
+            V,D = np.linalg.eig(np.dot(P,P.T))
             
-#             D = D.real
-#             print("eig gotten")
+            D = D.real
+            print("eig gotten")
             
-#             #print(V)
-#             print(D.shape)
+            #print(V)
+            print(D.shape)
             
-#             D= np.sort(np.diag(D))
-#             D = D[::-1]
-#             I = np.argsort(np.diag(D))
+            D= np.sort(np.diag(D))
+            D = D[::-1]
+            I = np.argsort(np.diag(D))
             
-#             V = V[I]
+            V = V[I]
             
-#             print("Sum: ",np.sum(D))
-#             print(type(D[0]))
-#             #Find Top eig values
-#             eig_index = 0
-#             energy_cutoff = 0.95*np.sum(D)
-#             energy = 0
-#             for i in range(0,D.shape[0]):
-#                 print(D[i])
-#                 energy += D[i]
+            print("Sum: ",np.sum(D))
+            print(type(D[0]))
+            #Find Top eig values
+            eig_index = 0
+            energy_cutoff = 0.95*np.sum(D)
+            energy = 0
+            for i in range(0,D.shape[0]):
+                print(D[i])
+                energy += D[i]
                 
-#                 if energy >= energy_cutoff:
-#                     print("We out here")
-#                     eig_index = i
-#                     break
+                if energy >= energy_cutoff:
+                    print("We out here")
+                    eig_index = i
+                    break
                     
-#             print("Eig index:", eig_index)
-#             Vp = V[:eig_index+1]
-#             #print(Vp)
-#             Pp = np.dot(Vp,P) #No transpose because of weird shape mismatch P has shape (3888,...) and Vp has 1x3888
+            print("Eig index:", eig_index)
+            Vp = V[:eig_index+1]
+            #print(Vp)
+            Pp = np.dot(Vp,P) #No transpose because of weird shape mismatch P has shape (3888,...) and Vp has 1x3888
             
-#             print(Vp.shape)
-#             print(Pp.shape)
+            print(Vp.shape)
+            print(Pp.shape)
             
             
             Vp = np.zeros((1, 3888))
