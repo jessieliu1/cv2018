@@ -233,7 +233,9 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             print("Pre mean sum: ", sum(P.sum(axis= 0)))
             print("P shape:", P.shape)
             #exit()
-            mp = np.average(P)
+            mp = np.average(P, axis=1)
+            mp = np.reshape(mp, (mp.shape[0],1))
+            print('mp shape:', mp.shape)
             P = np.subtract(P,mp)
 
 
@@ -249,48 +251,41 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
 
 
             #V,D = scp.linalg.eig(temp)
-            eng = matlab.engine.start_matlab()
-            print("engine started")
-            temp = matlab.double(temp.tolist())
+            # eng = matlab.engine.start_matlab()
+            # print("engine started")
+            # temp = matlab.double(temp.tolist())
 
-            print("eigening")
-            check = eng.eig(temp)
+            # print("eigening")
+            # V, D = eng.eig(temp)
+            D, V = np.linalg.eig(temp)
 
-            print("Check: ",type(check))
-            check = np.array(check)
-            print("Check: ",type(check))
-            print("Check shape: ", check.shape)
-
-
-            #FIGURE OUT HOW TO GET FROM CHECK BEING SHAPE 3888, 1 to V & D... yikes!
-
-            V = check[0]
-            D = check[1]
-
-            print("V: ", V.shape)
-            print("D: ", D.shape)
+            D = np.array(D)
+            # print("D shape: ", D.shape)
+            V = np.array(V)
+            # print("V shape: ", V.shape)
 
             
-            D = D.real
+            #D = D.real
             print("eig gotten")
-            
-            #print(V)
-            print(D.shape)
-            
-            D= np.sort(np.diag(D))
-            D = D[::-1]
-            I = np.argsort(np.diag(D))
+            d = np.sort(D)
+            d = d[::-1]
+            I = np.argsort(D)
+            D = d
             
             V = V[I]
+
+            print("D shape: ", D.shape)
+            print("I shape: ", I.shape)
+            print("V shape: ", V.shape)
             
-            print("Sum: ",np.sum(D))
-            print(type(D[0]))
+            # print("Sum: ",np.sum(D))
+            # print(type(D[0]))
             #Find Top eig values
             eig_index = 0
             energy_cutoff = 0.95*np.sum(D)
             energy = 0
             for i in range(0,D.shape[0]):
-                print(D[i])
+                #print(D[i])
                 energy += D[i]
                 
                 if energy >= energy_cutoff:
@@ -299,9 +294,10 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                     break
                     
             print("Eig index:", eig_index)
-            Vp = V[:eig_index+1]
-            #print(Vp)
-            Pp = np.dot(Vp,P) #No transpose because of weird shape mismatch P has shape (3888,...) and Vp has 1x3888
+            Vp = V[:, :eig_index]
+            print("Vp:", Vp.shape)
+            print("P:", P.shape)
+            Pp = np.dot(Vp.T,P) #No transpose because of weird shape mismatch P has shape (3888,...) and Vp has 1x3888
             
             print(Vp.shape)
             print(Pp.shape)
@@ -312,8 +308,8 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             #Pp = np.zeros((1, 1156))
 
             
-            Vp = np.zeros((1, 3888))
-            Pp = np.zeros((1, 1156))
+            # Vp = np.zeros((1, 3888))
+            # Pp = np.zeros((1, 1156))
                     
             for i in range (0,3):
                 
@@ -336,18 +332,29 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                 print(rows,columns)
                 
                 Rall = np.zeros( (rows, columns) )
-                z = np.zeros( (h*(current_patch**2), (math.floor((h-current_patch)/gap)+1) * (math.floor((w-current_patch)/p_str)+1)))
-        
-                for k in range (1, (h-current_patch+2), gap ): #DOUBLE CHECK THIS WHEN YOU GET HERE
-                    for j in range (1, (h-current_patch+2), gap ):
+                z = np.zeros( ( 3*(current_patch**2), ( math.floor( (h-current_patch)/gap ) +1 ) * ( math.floor ( (w-current_patch)/gap) +1 ) ) )
+                print('z_original', z.shape)
+
+                print("patch thing:", h-current_patch+1)
+                print("gap", gap)
+
+                for k in range (0, (h-current_patch+1), gap): #DOUBLE CHECK THIS WHEN YOU GET HERE
+                    for j in range (0, (h-current_patch+1), gap):
                         R = np.zeros((h,w,3))
-                        R[i:i+current_patch-1, j:j+current_patch-1,:] = 1
+                        R[k:k+current_patch, j:j+current_patch,:] = 1
                         
-                        Rall[:,(math.ceil(i/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap)]=R.flatten() #This line is sketchie AF
+                        Rall[:,(math.ceil(k/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap)]=R.flatten() #This line is sketchie AF
                         ks, ls, zij, ang = nearest_n(R, X, current_patch, S, h, w, 3, Pp,Vp,p_str,mp,L,gap)
-                        temp = scp.misc.imrotate(reshape(zij,n,n,c),ang*90,'bilinear')
-                             
-                        z[:,(math.ceil(i/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + ceil(j/gap)]=temp
+                        temp = scp.misc.imrotate(np.reshape(zij,(current_patch,current_patch,3)),ang*90,'bilinear')
+                        print('temp', temp.shape)
+                        print('k', k)
+                        print('j', j)
+                        print('gap', gap)
+                        print('w', w)
+                        print('current_patch', current_patch)
+                        print('value thing', (math.ceil(k/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap))
+                        print('z', z.shape)
+                        z[:,(math.ceil((k)/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil((j)/gap)]=temp.flatten()
                 
                 #3. Style Synthesis        
                 print("Robust Aggregation")
@@ -365,15 +372,15 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                              
                 #5. Color Transfer
                 print("Color Transfer")
-                X = imhistmatch(reshape(X_hat, (h,w,3)), reshape(S,(h,w,3))) 
+                X = imhistmatch(np.reshape(X_hat, (h,w,3)), np.reshape(S,(h,w,3))) 
                 
                 #6. Denoise
                 print("Denoise")
                 #COME BACK TO THIS, might be in cv2 https://docs.opencv.org/3.0-beta/modules/ximgproc/doc/edge_aware_filters.html
                 #Might be in existing files
         if (L>1):
-            X=resize(reshape(X, (h,w,3),L))
-    return (reshape(X,imsize,imsize,3))
+            X=np.resize(np.reshape(X, (h,w,3)),L)
+    return np.reshape(X,(imsize,imsize,3))
 
 
 # In[10]:
@@ -389,8 +396,10 @@ def master_routine(pikachu,van_gogh):
     #crop content and style into max_resolution 
     #content = content[0:max_resolution-1,0:max_resolution-1]
     #style = style[0:max_resolution-1,0:max_resolution-1]
-    first_iteration = style_transfer(content,style,                                     np.ones((max_resolution,max_resolution,3)),                                     np.ones((max_resolution,max_resolution)),                                     0,                                      0,                                     [36, 22],                                      [4, 2, 1],                                     max_resolution)
-    output = style_transfer(content, style, first_iteration,segment(pikachu,1.05),                            0.25, 1.5, [36, 22, 13], [4, 2, 1], max_resolution)
+    first_iteration = style_transfer(content,style, np.ones((max_resolution,max_resolution,3)),\
+        np.ones((max_resolution,max_resolution)), 0, 0,[36, 22],[4, 2, 1], max_resolution)
+    output = style_transfer(content, style, first_iteration,segment(pikachu,1.05), \
+        0.25, 1.5, [36, 22, 13], [4, 2, 1], max_resolution)
     plt.imshow(output)
     
 
