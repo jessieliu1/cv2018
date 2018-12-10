@@ -2,51 +2,67 @@ import numpy as np
 import numpy.matlib as npm
 
 def irls(R, X, z):
+    print("Full R: ", R.shape)
+    print("Zeros in R: ", len( ( np.where(R< 1)[0] )  )   )
+
     tNc, Nij = R.shape
-    I = 5
+    I = 5 #Changed from 5!
     Xk = X
     r = 0.8
-    unsampled_pix = (~(R.sum(axis=1) > 0)).astype(float)
+    #unsampled_pix = (~(R.sum(axis=1) > 0)).astype(float)
+    unsampled_pix = np.zeros((tNc))
+    R_copy = np.copy(R)
 
     for k in range(0, I):
+        print("----------new k iteration-------")
+        print("k iteration number: ",k)
+        
+        R_copy = np.copy(R)
+
+        print("Zeros in R: ", len( ( np.where(R_copy< 1)[0] )  )   )
         A = unsampled_pix
-        B = np.matmul(Xk, unsampled_pix)
+        B = np.multiply(Xk, unsampled_pix)
 
         for i in range(0, Nij):
-            #w = np.power(sum(np.power(np.matmul(Xk, np.where(R[:,i] != 0, 1, 0))-z[:,i], 2) + 1e-10), ((r-2)/2))
-            
-            print("Full R: ", R.shape)
+            #print("----------new Nij iteration-------")
+            #print("Nij iteration number: ", i)
 
-            print("R shape: ", R[:,i].shape)
-            print("R: ", np.sum(R))
-            
+            xk_temp = np.array(np.where(R_copy[:,i]!=0.0))
 
+            #print("xk_temp shape: ", xk_temp.shape)
 
-            temp = np.array(np.where(R[:,i]!=0.0))
-            print("Logical shit: ", temp)
-
-            logical = Xk[temp[0]]
-            print("new logical: ", logical.shape)
-
-            
+            logical = Xk[xk_temp[0]]
+            #print("Xk Logical: ", logical.shape)
 
             subtract = np.subtract(logical, z[:,i])
-
             square = np.square(subtract)
-
             add = np.add(square, 1e-10)
-
             summation = np.sum(add)
 
             w = np.power(summation, ((r-2)/2))
 
-            A = A + w * R[:,i]
-            temp=R[:,i]
+            #print("W: ", w)
 
-            ####LOGICal doesnt WORK HERE!!!!!!!!!!!!!!!!!!!!!!
-            temp[np.where(temp!= 0, 1, 0)]=z[:,i]
-            B=B+w*temp
-        Xk = np.divide(1,(A + 1e-10)) * B
+            A = A + w * R_copy[:,i]
+
+            #print("A shape: ", A.shape)
+
+            B_temp=R_copy[:,i]
+
+            #print("Pre logical B temp: ", B_temp.shape)
+            #print("B Nonzeros: ", len(np.nonzero(B_temp)[0]))
+            #print("Z :", z[:,i].shape)
+
+
+            B_temp[np.nonzero(B_temp)] = z[:,i]
+            #print("B_Temp shape: ", B_temp.shape)
+
+            B=B+w*B_temp
+            #print("B shape: ", B.shape)
+
+        Xk = np.multiply (np.divide(1,(A + 1e-5)), B)
+
+
     return Xk
 
 

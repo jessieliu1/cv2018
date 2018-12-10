@@ -13,7 +13,7 @@ import math
 
 def ind2sub(s, IND):
     print('type IND: ', type(IND))
-    row_size = s.shape[0]
+    row_size = s.shape[1]
     
     I = []
     J = []
@@ -39,13 +39,15 @@ def add_noise(image,sigma=50):
     return (image + gauss).astype('uint8')
 
 def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
+    print("----------------Nearest Neighbor--------------")
+
     print("R sum: ", np.sum(np.sum(R)))
     R = R.flatten()
     X = X.flatten()
-    print("X: ", X.shape)
-    print("R: ", R.shape)
+    # print("X: ", X.shape)
+    # print("R: ", R.shape)
     S = np.reshape(S, (h,w,3))
-    print("S: ", S.shape)
+    # print("S: ", S.shape)
     
     #temp = np.argwhere(R != 0)
     #print(temp.shape)
@@ -53,31 +55,31 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     
     RX = X[np.array(np.where(R!=0.0)[0])]
     RX = np.reshape(RX, (RX.shape[0], 1))
-    print("RX:", RX.shape)
+    # print("RX:", RX.shape)
     
     #print("test")
     min_l2 = float('inf')
 
     #print("test2")
 
-    print("Vp: ", Vp.shape)
+    # print("Vp: ", Vp.shape)
     RXp = Vp.T @ (np.subtract(RX,mp))
     
-    print("RXp: ", RXp.shape)
+    # print("RXp: ", RXp.shape)
     
     #eng = matlab.engine.start_matlab()
-    print("engine started")
+    # print("engine started")
 
     temp = int(Pp.shape[1])
     #RXp = matlab.double(RXp.tolist())
 
-    print('temp: ', temp)
+    # print('temp: ', temp)
 
     print("Heading into tiling")
     dif = npm.repmat(RXp, 1, temp)
     #dif = eng.repmat(RXp, [1, temp])
 
-    print('dif shape: ', dif.shape)
+    # print('dif shape: ', dif.shape)
 
     #dif = np.tile(RXp, (1, Pp.shape[1])) - Pp
     
@@ -88,20 +90,20 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     sqr = np.sum(np.square(dif), axis = 0)
     
    # sqr = add_noise(sqr, 2) #Play with STD, also applying gaussian noise 
-    sqr = sqr + npm.randn(sqr.shape)
+    sqr = sqr + np.abs(npm.randn(sqr.shape))
     sqr = sqr.flatten()
 
     idx = np.argmin(sqr) #find minimum index in each column
-    print('idx: ', idx)
+    #print('idx: ', idx)
     
     temp = np.zeros( (math.floor( (h-Q_size)/Pstride), math.floor( (w-Q_size)/Pstride)) )
 
     print("ind2sub starting")
     
     inter = np.array(np.ceil(idx/4)).astype(int)
-    print('inter ', inter)
+    #print('inter ', inter)
     # inter = np.reshape(inter, (inter.shape[0], 1))
-    print('type inter ', type(inter))
+    #print('type inter ', type(inter))
 
     ls,ks =ind2sub(temp, [inter])
     # maybe don't subtract?
@@ -112,6 +114,9 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     
     print("ks,ls: ", ks[0], ls[0])
     print("S size: ", S.size)
+
+    if ks[0] > 64: #Some jank stuff
+    	ks[0] = 64
 
     z = S[ks[0]-1:(ks[0]+Q_size-1),ls[0]-1:(ls[0]+Q_size-1),:]
     print('z', z.shape)

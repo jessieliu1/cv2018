@@ -13,8 +13,17 @@ import matlab.engine
 from irls import irls
 from nearest_neighbor import nearest_n
 
+import numpy.matlib as npm
 
 from skimage.exposure import cumulative_distribution
+import os
+
+def write_output_img(filename, img):
+	if not os.path.isdir("output"):
+		os.mkdir("output")
+
+	cv2.imwrite("output/" + filename, img)
+
 
 #source: https://stackoverflow.com/questions/32655686/histogram-matching-of-two-images-in-python-2-x
 def cdf(im):
@@ -122,7 +131,7 @@ def laplace_of_gaussian(gray_img, sigma=1., kappa=0.75, pad=False):
 
 # In[8]:
 
-'''
+#'''
 def segment(img,scale):
     #img = matlab.double(img.tolist())
     #eng = matlab.engine.start_matlab()
@@ -153,7 +162,7 @@ def segment(img,scale):
     gaussian_filter = gaussian2D(scale)
     W = signal.convolve2d((BW+10*E).astype(float),gaussian_filter,mode='same')
     return W
-'''
+#'''
 
 # pikachu = pikachu.astype('uint8')
 # gray_van_gogh = color.rgb2gray(pikachu)
@@ -163,6 +172,9 @@ def segment(img,scale):
 # In[9]:
 
 def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, scales, imsize):
+    print("--------------Starting Style Transfer---------------")
+
+
     output_shape = (imsize, imsize, 3)
     #content image now has imhist applied to it, has the colors of style
     C0 = imhistmatch(resize(content, output_shape),resize(style, output_shape))
@@ -188,15 +200,15 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
         hall = rescale(hall0,1/L)
 
 
-        print("content_scaled: ", content_scaled.shape)
-        print("style_scaled: ", style_scaled.shape)
-        print("mask: ", mask.shape)
-        print("C: ", C.shape)
-        print("S: ", S.shape)
-        print("h: ", h)
-        print("w: ", w)
-        print("X: ", X.shape)
-        print("hall: ", hall.shape)
+        # print("content_scaled: ", content_scaled.shape)
+        # print("style_scaled: ", style_scaled.shape)
+        # print("mask: ", mask.shape)
+        # print("C: ", C.shape)
+        # print("S: ", S.shape)
+        # print("h: ", h)
+        # print("w: ", w)
+        # print("X: ", X.shape)
+        # print("hall: ", hall.shape)
 
         
         #iterate through patch sizes, like in the algorithm.
@@ -215,9 +227,9 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                 for j in range (0, (w-current_patch+1), p_str):
                     patch = S[k:(k+current_patch), j:(j+current_patch), :]
 
-                    if k == 40 and j == 64:
-                        plt.imshow(patch)
-                        print("Patch sum: ", np.sum(patch))
+                    # if k == 40 and j == 64:
+                    #     plt.imshow(patch)
+                    #     print("Patch sum: ", np.sum(patch))
 
                     for i in range (0,4):
                         temp = scp.misc.imrotate(patch,i*90,'bilinear')
@@ -230,12 +242,12 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             #S = np.copy(S)
             
             #Remove mean
-            print("Pre mean sum: ", sum(P.sum(axis= 0)))
-            print("P shape:", P.shape)
+            # print("Pre mean sum: ", sum(P.sum(axis= 0)))
+            # print("P shape:", P.shape)
             #exit()
             mp = np.average(P, axis=1)
             mp = np.reshape(mp, (mp.shape[0],1))
-            print('mp shape:', mp.shape)
+            # print('mp shape:', mp.shape)
             P = np.subtract(P,mp)
 
 
@@ -247,7 +259,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             #V,D = np.linalg.eig(P @ P.T)
 
             temp = P @ P.T
-            print("Temp: ", temp.shape)
+            # print("Temp: ", temp.shape)
 
 
             #V,D = scp.linalg.eig(temp)
@@ -274,9 +286,9 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             
             V = V[I]
 
-            print("D shape: ", D.shape)
-            print("I shape: ", I.shape)
-            print("V shape: ", V.shape)
+            # print("D shape: ", D.shape)
+            # print("I shape: ", I.shape)
+            # print("V shape: ", V.shape)
             
             # print("Sum: ",np.sum(D))
             # print(type(D[0]))
@@ -295,12 +307,12 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                     
             print("Eig index:", eig_index)
             Vp = V[:, :eig_index]
-            print("Vp:", Vp.shape)
-            print("P:", P.shape)
+            # print("Vp:", Vp.shape)
+            # print("P:", P.shape)
             Pp = np.dot(Vp.T,P) #No transpose because of weird shape mismatch P has shape (3888,...) and Vp has 1x3888
             
-            print(Vp.shape)
-            print(Pp.shape)
+            # print(Vp.shape)
+            # print(Pp.shape)
 
             #'''
             
@@ -312,15 +324,17 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
             # Pp = np.zeros((1, 1156))
                     
             for i in range (0,3):
+                print("----------------------STARTING ANOTHER RUN THROUGH-----------------------")
                 
                 #1. Style fusion
+                print("--------------Style Fusion---------------")
                 X = hallcoeff*hall+(1-hallcoeff)*hall
                 X = X.flatten()
                 print("X post hall coeff: ", X.shape)
 
 
                 #2. Patch Matching
-                print("Patch Matching")
+                print("--------------Patch Matching---------------")
                 index = np.argwhere(np.array(patch_sizes) == current_patch)[0][0] #CAN'T LIST SAME PATCH SIZE TWICE!
                 
                 gap = gap_sizes[index]
@@ -328,7 +342,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                 print(gap)
                 
                 rows = h*w*3
-                columns = (math.floor((h-current_patch)/gap)+1) * (math.floor((w-current_patch)/p_str)+1)
+                columns = (math.floor((h-current_patch)/gap)+1) * (math.floor((w-current_patch)/gap)+1)
                 print(rows,columns)
                 
                 Rall = np.zeros( (rows, columns) )
@@ -338,41 +352,92 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                 print("patch thing:", h-current_patch+1)
                 print("gap", gap)
 
+
+                counter = 0
                 for k in range (0, (h-current_patch+1), gap): #DOUBLE CHECK THIS WHEN YOU GET HERE
                     for j in range (0, (h-current_patch+1), gap):
+                        counter +=1
+                        print("Counter: ", counter)
                         R = np.zeros((h,w,3))
                         R[k:k+current_patch, j:j+current_patch,:] = 1
+
                         
                         Rall[:,(math.ceil(k/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap)]=R.flatten() #This line is sketchie AF
+                        print("Rall sum: ", np.sum(Rall))
+
                         ks, ls, zij, ang = nearest_n(R, X, current_patch, S, h, w, 3, Pp,Vp,p_str,mp,L,gap)
                         temp = scp.misc.imrotate(np.reshape(zij,(current_patch,current_patch,3)),ang*90,'bilinear')
-                        print('temp', temp.shape)
-                        print('k', k)
-                        print('j', j)
-                        print('gap', gap)
-                        print('w', w)
-                        print('current_patch', current_patch)
-                        print('value thing', (math.ceil(k/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap))
-                        print('z', z.shape)
+                        # print('temp', temp.shape)
+                        # print('k', k)
+                        # print('j', j)
+                        # print('gap', gap)
+                        # print('w', w)
+                        # print('current_patch', current_patch)
+                        # print('value thing', (math.ceil(k/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap))
+                        # print('z', z.shape)
                         z[:,(math.ceil((k)/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil((j)/gap)]=temp.flatten()
                 
                 #3. Style Synthesis        
-                print("Robust Aggregation")
-                Xtilde=irls(Rall,X,z)
+                print("------------Robust Aggregation-------------")
+                X_tilde=irls(Rall,X,z)
+                print(np.sum(X_tilde))
+
                              
                 #4. Content Fusion
-                print("Content Fusion")
-                W = np.tile(Wcoeff*mask/max(mask),(3,1));
-                X_temp = np.matmul( W + np.ones(size(W)) , (Xtilde+ np.matmul(W,C))) #DOUBLE CHECK THIS #W is (3*Nc/L x 1)) 
+                print("----------------------Content Fusion-------------------")
+                print("Wcoeff: ", Wcoeff)
+                print("mask: ", mask.shape)
+
+                mask_max = np.amax(mask.flatten() )
+                print("mask_max: ", mask_max)
+
+                W = npm.repmat(Wcoeff* mask.flatten()/mask_max, 1,3 ).T
+
+                print("W sum: ", np.sum(W))
+
+                W_temp = W + np.ones((W.shape))
+                W_temp = np.reshape(W_temp, (W_temp.shape[0],1))
                 
-                one_temp = np.ones(X_temp.shape)
-                             
-                X_hat = np.divide(one_temp, X_temp)
-                             
-                             
+                W_temp = np.divide(np.ones(W_temp.shape), W_temp)
+
+                print("W_temp sum: ", np.sum(W_temp))
+
+                C = C.flatten()
+                C = np.reshape(C, (C.shape[0], 1))
+
+                #print("C shape: ", C.shape)
+
+                W_C_temp = np.multiply(W,C)
+                print("W_C sum: ", np.sum(W_C_temp))
+
+
+                X_tilde = np.reshape(X_tilde, (X_tilde.shape[0],1))
+                #print("X_tilde shape: ", X_tilde.shape)
+
+                X_tilde_temp = X_tilde + W_C_temp
+                print("X_tilde_temp sum: ", np.sum(X_tilde_temp))
+
+
+                X_hat = np.multiply(W_temp, X_tilde_temp) #DOUBLE CHECK THIS #W is (3*Nc/L x 1)) 
+                X_hat = np.reshape(X_hat, (h,w,3))
+
+                print("X_hat_shape: ", X_hat.shape)
+                print("X_hat_sum: ", np.sum(X_hat))
+
+                #write_output_img('test.png', X_hat)
+
+                S = np.reshape(S,(h,w,3))
+                print("S shape: ", S.shape)
+
+                
+
+
+
                 #5. Color Transfer
-                print("Color Transfer")
-                X = imhistmatch(np.reshape(X_hat, (h,w,3)), np.reshape(S,(h,w,3))) 
+                print("------------Color Transfer---------------")
+
+                cX = imhistmatch(X_hat,S ) 
+                write_output_img('test.png', cX)
                 
                 #6. Denoise
                 print("Denoise")
@@ -396,16 +461,32 @@ def master_routine(pikachu,van_gogh):
     #crop content and style into max_resolution 
     #content = content[0:max_resolution-1,0:max_resolution-1]
     #style = style[0:max_resolution-1,0:max_resolution-1]
-    first_iteration = style_transfer(content,style, np.ones((max_resolution,max_resolution,3)),\
-        np.ones((max_resolution,max_resolution)), 0, 0,[36, 22],[4, 2, 1], max_resolution)
-    output = style_transfer(content, style, first_iteration,segment(pikachu,1.05), \
-        0.25, 1.5, [36, 22, 13], [4, 2, 1], max_resolution)
+    first_iteration = style_transfer(content,
+    								style, 
+    								np.ones((max_resolution,max_resolution,3)),
+        							np.ones((max_resolution,max_resolution)), 
+        							0, 
+        							0,
+        							[36, 22],
+        							[4, 2, 1], 
+        							max_resolution
+        							)
+    print("\n\n\n\n ===========FIRST ITERATION COMPLETE!!!!!=============== \n\n\n\n")
+    output = style_transfer(content, 
+    						style, 
+    						first_iteration,
+    						segment(pikachu,1.05),
+    						0.25, 
+    						1.5, 
+    						[36, 22, 13], 
+    						[4, 2, 1], 
+    						max_resolution)
     plt.imshow(output)
     
 
 if __name__ == '__main__':
 	I= np.asarray(Image.open('test.jpg').convert("L"), dtype=float)
-	pikachu = np.asarray(Image.open('pikachu.jpg').convert("RGB"),dtype=int)
+	pikachu = np.asarray(Image.open('cu.jpg').convert("RGB"),dtype=int) #REPLACED PIKACHU!
 	van_gogh = np.asarray(Image.open('van_gogh.jpg').convert("RGB"),dtype=int)
 	master_routine(pikachu,van_gogh)
 
