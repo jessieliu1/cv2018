@@ -19,10 +19,10 @@ from skimage.exposure import cumulative_distribution
 import os
 
 def write_output_img(filename, img):
-	if not os.path.isdir("output"):
-		os.mkdir("output")
+    if not os.path.isdir("output"):
+        os.mkdir("output")
 
-	cv2.imwrite("output/" + filename, img)
+    cv2.imwrite("output/" + filename, img)
 
 
 #source: https://stackoverflow.com/questions/32655686/histogram-matching-of-two-images-in-python-2-x
@@ -472,28 +472,26 @@ def master_routine(pikachu,van_gogh,segment):
     #content = content[0:max_resolution-1,0:max_resolution-1]
     #style = style[0:max_resolution-1,0:max_resolution-1]
     first_iteration = style_transfer(content,
-    								style, 
-    								np.ones((max_resolution,max_resolution,3)),
-        							np.ones((max_resolution,max_resolution)), 
-        							0, 
-        							0,
-        							[36, 22],
-        							[4, 2, 1], 
-        							max_resolution
-        							)
+                                  style, 
+                                  np.ones((max_resolution,max_resolution,3)),
+                                  np.ones((max_resolution,max_resolution)), 
+                                  0, 
+                                  0,
+                                  [36, 22],
+                                  [4, 2, 1], 
+                                  max_resolution
+                                  )
     print("\n\n\n\n ===========FIRST ITERATION COMPLETE!!!!!=============== \n\n\n\n")
-    segment = 
-
 
     output = style_transfer(content, 
-    						style, 
-    						first_iteration,
-    						segment,
-    						0.25, 
-    						1.5, 
-    						[36, 22, 13], 
-    						[4, 2, 1], 
-    						max_resolution)
+                            style,
+                            first_iteration,
+                            segment,
+                            0.25, 
+                            1.5, 
+                            [36, 22, 13], 
+                            [4, 2, 1], 
+                            max_resolution)
 
     write_output_img('final_output.png', output)
     print("\n\n\n\n ===========DONEZO!!!=============== \n\n\n\n")
@@ -501,11 +499,11 @@ def master_routine(pikachu,van_gogh,segment):
     
 
 if __name__ == '__main__':
-	I= np.asarray(Image.open('test.jpg').convert("L"), dtype=float)
-	pikachu = np.asarray(Image.open('cu.jpg').convert("RGB"),dtype=int) #REPLACED PIKACHU!
-	van_gogh = np.asarray(Image.open('van_gogh.jpg').convert("RGB"),dtype=int)
-    segment = np.asarray(Image.open('cu_segment.jpg').convert("RGB"),dtype=int)
-	master_routine(pikachu,van_gogh,segment)
+    I= np.asarray(Image.open('test.jpg').convert("L"), dtype=float)
+    pikachu = np.asarray(Image.open('cu.jpg').convert("RGB"),dtype=int) #REPLACED PIKACHU!
+    van_gogh = np.asarray(Image.open('van_gogh.jpg').convert("RGB"),dtype=int)
+    segment = np.asarray(Image.open('cu_segment.jpg').convert("RGB"),dtype=float)
+    master_routine(pikachu,van_gogh,segment)
 
 
 # In[ ]:
@@ -522,5 +520,3 @@ if __name__ == '__main__':
 # p_str = 4
 
 # print((math.ceil(k/p_str)-1)  * (math.floor((w-current_patch)/p_str)+1)*4 +     (math.ceil(j/p_str)-1)*4 + i + 1 )
-
-# 
