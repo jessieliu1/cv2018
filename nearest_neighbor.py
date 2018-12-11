@@ -75,7 +75,7 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
 
     # print('temp: ', temp)
 
-    print("Heading into tiling")
+    #print("Heading into tiling")
     dif = npm.repmat(RXp, 1, temp)
     #dif = eng.repmat(RXp, [1, temp])
 
@@ -85,7 +85,7 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     
     #dif = RXp
 
-    print("Out of tiling")
+    #print("Out of tiling")
     
     sqr = np.sum(np.square(dif), axis = 0)
     
@@ -119,7 +119,7 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     	ks[0] = 64
 
     z = S[ks[0]-1:(ks[0]+Q_size-1),ls[0]-1:(ls[0]+Q_size-1),:]
-    print('z', z.shape)
+    #print('z', z.shape)
     z = z.flatten()
 
     return ks,ls,z,ang

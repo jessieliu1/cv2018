@@ -8,8 +8,8 @@ from skimage.transform import rescale, resize
 import scipy as scp
 from skimage.segmentation import active_contour
 from scipy import signal
-import matlab
-import matlab.engine
+#import matlab
+#import matlab.engine
 from irls import irls
 from nearest_neighbor import nearest_n
 
@@ -131,40 +131,6 @@ def laplace_of_gaussian(gray_img, sigma=1., kappa=0.75, pad=False):
 
 # In[8]:
 
-#'''
-def segment(img,scale):
-    #img = matlab.double(img.tolist())
-    #eng = matlab.engine.start_matlab()
-#     for x in range(400):
-#         for y in range(400):
-#             img[x][y] = matlab.double(img[x][y])
-#     E = eng.edge(img,'log',0.03,scale)
-#     tf_test = np.array(E._data.tolist())
-#     BW = tf_test.reshape(E.size).transpose()
-    E = laplace_of_gaussian(img,scale,0.03,True)
-    #return BW
-    gaussian_filter = gaussian2D(scale*7)
-    B = signal.convolve2d(0.5*E,gaussian_filter,mode='same')
-    mask = np.zeros_like(B)
-    B_mean = np.mean(B)
-    for i in range(0,B.shape[0]):
-        for j in range(0,B.shape[1]):
-            if B[i][j] > B_mean: 
-                mask[i][j] = 1
-            else:
-                mask[i][j] = 0
-    img = matlab.double(img.tolist())
-    mask = matlab.double(mask.tolist())
-    eng = matlab.engine.start_matlab()
-    tf= eng.activecontour(img,mask)
-    tf_test = np.array(tf._data.tolist())
-    BW = tf_test.reshape(tf.size).transpose()
-    gaussian_filter = gaussian2D(scale)
-    W = signal.convolve2d((BW+10*E).astype(float),gaussian_filter,mode='same')
-    return W
-#'''
-
-# pikachu = pikachu.astype('uint8')
 # gray_van_gogh = color.rgb2gray(pikachu)
 # output = segment(gray_van_gogh,1.05)
 # plt.imshow(output, cmap='gray')
@@ -173,7 +139,8 @@ def segment(img,scale):
 
 def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_sizes, scales, imsize):
     print("--------------Starting Style Transfer---------------")
-
+    print("Content shape: ", content.shape)
+    print("Mask shape: ", mask_temp.shape)
 
     output_shape = (imsize, imsize, 3)
     #content image now has imhist applied to it, has the colors of style
@@ -195,6 +162,10 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
         mask = np.copy(mask_temp)
 
         mask = rescale(mask, 1/L)
+
+        print("Content scaled shape: ", content_scaled.shape)
+        print("Mask scaled shape: ", mask.shape)
+
         C = np.copy(content_scaled)
         S = np.copy(style_scaled)
         h = math.ceil(h0/L)
@@ -223,7 +194,7 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
         
         #iterate through patch sizes, like in the algorithm.
         for N in patch_sizes:
-            
+            print("On this patch size: ", N)            
             p_str = 4 #Weird constant see line 39 of source
             
             current_patch = N #Conversion from source; current_patch = Q_size
@@ -261,7 +232,7 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
             P = np.subtract(P,mp)
 
 
-            print("Post mean sum of p: ", sum(P.sum(axis= 0)))
+            #print("Post mean sum of p: ", sum(P.sum(axis= 0)))
             #'''
 
             #Compute PCA of P
@@ -334,13 +305,13 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
             # Pp = np.zeros((1, 1156))
                     
             for i in range (0,3):
-                print("----------------------STARTING ANOTHER RUN THROUGH-----------------------")
-                
+                print("----------------------STARTING ANOTHER RUN THROUGH OF SYNTHESIS-----------------------")
+                print("Run number: ", i) 
                 #1. Style fusion
                 print("--------------Style Fusion---------------")
                 X = hallcoeff*hall+(1-hallcoeff)*hall
                 X = X.flatten()
-                print("X post hall coeff: ", X.shape)
+                #print("X post hall coeff: ", X.shape)
 
 
                 #2. Patch Matching
@@ -349,18 +320,18 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
                 
                 gap = gap_sizes[index]
                 
-                print(gap)
+                #print(gap)
                 
                 rows = h*w*3
                 columns = (math.floor((h-current_patch)/gap)+1) * (math.floor((w-current_patch)/gap)+1)
-                print(rows,columns)
+                #print(rows,columns)
                 
                 Rall = np.zeros( (rows, columns) )
                 z = np.zeros( ( 3*(current_patch**2), ( math.floor( (h-current_patch)/gap ) +1 ) * ( math.floor ( (w-current_patch)/gap) +1 ) ) )
-                print('z_original', z.shape)
+                #print('z_original', z.shape)
 
-                print("patch thing:", h-current_patch+1)
-                print("gap", gap)
+                #print("patch thing:", h-current_patch+1)
+                #print("gap", gap)
 
 
                 counter = 0
@@ -373,7 +344,7 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
 
                         
                         Rall[:,(math.ceil(k/gap)-1)*(math.floor( (w-current_patch)/gap )+ 1) + math.ceil(j/gap)]=R.flatten() #This line is sketchie AF
-                        print("Rall sum: ", np.sum(Rall))
+                        #print("Rall sum: ", np.sum(Rall))
 
                         ks, ls, zij, ang = nearest_n(R, X, current_patch, S, h, w, 3, Pp,Vp,p_str,mp,L,gap)
                         temp = scp.misc.imrotate(np.reshape(zij,(current_patch,current_patch,3)),ang*90,'bilinear')
@@ -396,7 +367,7 @@ def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_si
                 #4. Content Fusion
                 print("----------------------Content Fusion-------------------")
                 #print("Wcoeff: ", Wcoeff)
-                #print("mask: ", mask.shape)
+                print("mask: ", mask.shape)
 
                 mask_max = np.amax(mask.flatten() )
                 #print("mask_max: ", mask_max)
@@ -471,6 +442,7 @@ def master_routine(pikachu,van_gogh,segment):
     #crop content and style into max_resolution 
     #content = content[0:max_resolution-1,0:max_resolution-1]
     #style = style[0:max_resolution-1,0:max_resolution-1]
+    '''
     first_iteration = style_transfer(content,
                                   style, 
                                   np.ones((max_resolution,max_resolution,3)),
@@ -481,11 +453,13 @@ def master_routine(pikachu,van_gogh,segment):
                                   [4, 2, 1], 
                                   max_resolution
                                   )
+    '''
     print("\n\n\n\n ===========FIRST ITERATION COMPLETE!!!!!=============== \n\n\n\n")
 
     output = style_transfer(content, 
                             style,
-                            first_iteration,
+                            np.ones((max_resolution,max_resolution,3)),
+                            #first_iteration,
                             segment,
                             0.25, 
                             1.5, 

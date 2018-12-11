@@ -2,8 +2,10 @@ import numpy as np
 import numpy.matlib as npm
 
 def irls(R, X, z):
-    print("Full R: ", R.shape)
-    print("Zeros in R: ", len( ( np.where(R< 1)[0] )  )   )
+    print("-----IN IRLS----")
+    
+    #print("Full R: ", R.shape)
+    #print("Zeros in R: ", len( ( np.where(R< 1)[0] )  )   )
 
     tNc, Nij = R.shape
     I = 5 #Changed from 5!
@@ -19,7 +21,7 @@ def irls(R, X, z):
         
         R_copy = np.copy(R)
 
-        print("Zeros in R: ", len( ( np.where(R_copy< 1)[0] )  )   )
+        #print("Zeros in R: ", len( ( np.where(R_copy< 1)[0] )  )   )
         A = unsampled_pix
         B = np.multiply(Xk, unsampled_pix)
 
@@ -64,10 +66,4 @@ def irls(R, X, z):
 
 
     return Xk
-
-
-
-
-
-
 
