@@ -179,13 +179,15 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
     #content image now has imhist applied to it, has the colors of style
     C0 = imhistmatch(resize(content, output_shape),resize(style, output_shape))
     #gaussian noise function is added to the re-colored content image
-    X = add_noise(C0)
+    X_temp = add_noise(C0)
     h0 = imsize
     w0 = imsize
     gap_sizes = [28, 18, 9, 6]
     
     #iterate through resolutions, like a gaussian pyramid.
     for L in scales:
+        print("----------------Resolution: ",L, "------------------")
+
         content_scaled = rescale(content, 1/L)
         style_scaled = rescale(style, 1/L)
         mask = rescale(mask, 1/L)
@@ -193,6 +195,10 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
         S = np.copy(style_scaled)
         h = math.ceil(h0/L)
         w = math.ceil(w0/L)
+
+        X = np.copy(X_temp)
+        #X = np.reshape(X, output_shape)
+
         X = rescale(X, 1/L)
 
         #X = x+
