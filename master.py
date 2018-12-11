@@ -171,7 +171,7 @@ def segment(img,scale):
 
 # In[9]:
 
-def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, scales, imsize):
+def style_transfer(content, style, hall0, mask_temp, hallcoeff, Wcoeff, patch_sizes, scales, imsize):
     print("--------------Starting Style Transfer---------------")
 
 
@@ -180,6 +180,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
     C0 = imhistmatch(resize(content, output_shape),resize(style, output_shape))
     #gaussian noise function is added to the re-colored content image
     X_temp = add_noise(C0)
+
     h0 = imsize
     w0 = imsize
     gap_sizes = [28, 18, 9, 6]
@@ -190,6 +191,9 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
 
         content_scaled = rescale(content, 1/L)
         style_scaled = rescale(style, 1/L)
+
+        mask = np.copy(mask_temp)
+
         mask = rescale(mask, 1/L)
         C = np.copy(content_scaled)
         S = np.copy(style_scaled)
@@ -391,22 +395,22 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                              
                 #4. Content Fusion
                 print("----------------------Content Fusion-------------------")
-                print("Wcoeff: ", Wcoeff)
-                print("mask: ", mask.shape)
+                #print("Wcoeff: ", Wcoeff)
+                #print("mask: ", mask.shape)
 
                 mask_max = np.amax(mask.flatten() )
-                print("mask_max: ", mask_max)
+                #print("mask_max: ", mask_max)
 
                 W = npm.repmat(Wcoeff* mask.flatten()/mask_max, 1,3 ).T
 
-                print("W sum: ", np.sum(W))
+                #print("W sum: ", np.sum(W))
 
                 W_temp = W + np.ones((W.shape))
                 W_temp = np.reshape(W_temp, (W_temp.shape[0],1))
                 
                 W_temp = np.divide(np.ones(W_temp.shape), W_temp)
 
-                print("W_temp sum: ", np.sum(W_temp))
+                #print("W_temp sum: ", np.sum(W_temp))
 
                 C = C.flatten()
                 C = np.reshape(C, (C.shape[0], 1))
@@ -414,26 +418,26 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                 #print("C shape: ", C.shape)
 
                 W_C_temp = np.multiply(W,C)
-                print("W_C sum: ", np.sum(W_C_temp))
+                #print("W_C sum: ", np.sum(W_C_temp))
 
 
                 X_tilde = np.reshape(X_tilde, (X_tilde.shape[0],1))
                 #print("X_tilde shape: ", X_tilde.shape)
 
                 X_tilde_temp = X_tilde + W_C_temp
-                print("X_tilde_temp sum: ", np.sum(X_tilde_temp))
+                #print("X_tilde_temp sum: ", np.sum(X_tilde_temp))
 
 
                 X_hat = np.multiply(W_temp, X_tilde_temp) #DOUBLE CHECK THIS #W is (3*Nc/L x 1)) 
                 X_hat = np.reshape(X_hat, (h,w,3))
 
-                print("X_hat_shape: ", X_hat.shape)
+                #print("X_hat_shape: ", X_hat.shape)
                 print("X_hat_sum: ", np.sum(X_hat))
 
                 #write_output_img('test.png', X_hat)
 
                 S = np.reshape(S,(h,w,3))
-                print("S shape: ", S.shape)
+                #print("S shape: ", S.shape)
 
                 
 
@@ -443,7 +447,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
                 print("------------Color Transfer---------------")
 
                 cX = imhistmatch(X_hat,S ) 
-                write_output_img('test.png', cX)
+                #write_output_img('test.png', cX)
                 
                 #6. Denoise
                 print("Denoise")
@@ -457,7 +461,7 @@ def style_transfer(content, style, hall0, mask, hallcoeff, Wcoeff, patch_sizes, 
 # In[10]:
 
 #master routine, calls style transfer. 
-def master_routine(pikachu,van_gogh):
+def master_routine(pikachu,van_gogh,segment):
     max_resolution = 400 
     #convert content and style to floats
     content = cv2.normalize(pikachu.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
@@ -478,23 +482,30 @@ def master_routine(pikachu,van_gogh):
         							max_resolution
         							)
     print("\n\n\n\n ===========FIRST ITERATION COMPLETE!!!!!=============== \n\n\n\n")
+    segment = 
+
+
     output = style_transfer(content, 
     						style, 
     						first_iteration,
-    						segment(pikachu,1.05),
+    						segment,
     						0.25, 
     						1.5, 
     						[36, 22, 13], 
     						[4, 2, 1], 
     						max_resolution)
-    plt.imshow(output)
+
+    write_output_img('final_output.png', output)
+    print("\n\n\n\n ===========DONEZO!!!=============== \n\n\n\n")
+    #plt.imshow(output)
     
 
 if __name__ == '__main__':
 	I= np.asarray(Image.open('test.jpg').convert("L"), dtype=float)
 	pikachu = np.asarray(Image.open('cu.jpg').convert("RGB"),dtype=int) #REPLACED PIKACHU!
 	van_gogh = np.asarray(Image.open('van_gogh.jpg').convert("RGB"),dtype=int)
-	master_routine(pikachu,van_gogh)
+    segment = np.asarray(Image.open('cu_segment.jpg').convert("RGB"),dtype=int)
+	master_routine(pikachu,van_gogh,segment)
 
 
 # In[ ]:

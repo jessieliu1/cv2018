@@ -12,7 +12,7 @@ import math
 # In[10]:
 
 def ind2sub(s, IND):
-    print('type IND: ', type(IND))
+    #print('type IND: ', type(IND))
     row_size = s.shape[1]
     
     I = []
@@ -98,7 +98,7 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     
     temp = np.zeros( (math.floor( (h-Q_size)/Pstride), math.floor( (w-Q_size)/Pstride)) )
 
-    print("ind2sub starting")
+    #print("ind2sub starting")
     
     inter = np.array(np.ceil(idx/4)).astype(int)
     #print('inter ', inter)
@@ -112,8 +112,8 @@ def nearest_n(R, X, Q_size, S, h, w, c, Pp,Vp,Pstride,mp,L, gap):
     
     ang=np.fmod(np.add(idx, 3),4)
     
-    print("ks,ls: ", ks[0], ls[0])
-    print("S size: ", S.size)
+    #print("ks,ls: ", ks[0], ls[0])
+    #print("S size: ", S.size)
 
     if ks[0] > 64: #Some jank stuff
     	ks[0] = 64
